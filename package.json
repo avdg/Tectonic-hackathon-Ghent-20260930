@@ -7,7 +7,7 @@
     "start": "node src/server.js",
     "dev": "node --watch src/server.js"
   },
-  "dependencies": {
-    "express": "^5.2.1"
+  "engines": {
+    "node": ">=24.0.0"
   }
 }

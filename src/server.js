@@ -1,18 +1,42 @@
-import express from 'express';
+import { createServer } from 'node:http';
+import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
-import apiRouter from './routes/api.js';
+import { handleApiRequest } from './routes/api.js';
 
-const app = express();
 const port = Number(process.env.PORT) || 3000;
-const publicDirectory = fileURLToPath(new URL('../public/', import.meta.url));
+const indexFile = fileURLToPath(new URL('../public/index.html', import.meta.url));
 
-app.use(express.json({ limit: '100kb' }));
-app.use('/api', apiRouter);
-app.use(express.static(publicDirectory));
-app.use('/api', (_request, response) => {
-  response.status(404).json({ error: 'API route not found' });
+const server = createServer(async (request, response) => {
+  let pathname;
+  try {
+    pathname = decodeURIComponent(new URL(request.url, 'http://localhost').pathname);
+  } catch {
+    response.writeHead(400).end('Bad request');
+    return;
+  }
+
+  if (handleApiRequest(request, response, pathname)) return;
+
+  if (pathname !== '/') {
+    response.writeHead(404).end('Not found');
+    return;
+  }
+
+  if (request.method !== 'GET' && request.method !== 'HEAD') {
+    response.writeHead(405, { Allow: 'GET, HEAD' }).end('Method not allowed');
+    return;
+  }
+
+  try {
+    const content = await readFile(indexFile);
+    response.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+    response.end(request.method === 'HEAD' ? undefined : content);
+  } catch (error) {
+    console.error(error);
+    response.writeHead(500).end('Internal server error');
+  }
 });
 
-app.listen(port, () => {
+server.listen(port, () => {
   console.log(`Prototype server listening at http://localhost:${port}`);
 });
