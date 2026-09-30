@@ -617,7 +617,7 @@
       });
 
       document.addEventListener('visibilitychange', () => {
-        if (document.hidden && currentStep >= 0 && !isPaused) {
+        if (document.hidden && currentStep >= 0 && !isPaused && mediaRecorder?.state !== 'recording') {
           isPaused = true;
           if (advanceTimer) {
             window.clearTimeout(advanceTimer);
