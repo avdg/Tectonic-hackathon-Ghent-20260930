@@ -39,7 +39,10 @@ const server = createServer(async (request, response) => {
 
   try {
     const content = await readFile(pageFile);
-    response.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+    response.writeHead(200, {
+      'Content-Type': 'text/html; charset=utf-8',
+      'Cache-Control': 'no-store'
+    });
     response.end(request.method === 'HEAD' ? undefined : content);
   } catch (error) {
     console.error(error);

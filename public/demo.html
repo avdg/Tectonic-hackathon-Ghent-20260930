@@ -195,6 +195,7 @@
       let isPaused = false;
       let runId = 0;
       let advanceTimer = null;
+      let speechWatchdogTimer = null;
       let usingSpeech = false;
       let recorderWindow = null;
       let captureStream = null;
@@ -363,7 +364,9 @@
 
       function cleanupAudio() {
         window.clearTimeout(advanceTimer);
+        window.clearTimeout(speechWatchdogTimer);
         advanceTimer = null;
+        speechWatchdogTimer = null;
         usingSpeech = false;
         if (audio) {
           audio.pause();
@@ -452,14 +455,32 @@
         voiceNote.textContent = preferredVoice
           ? `Browser voice: ${preferredVoice.name} · rate ${VOICE_CONFIG.rate} · pitch ${VOICE_CONFIG.pitch}.`
           : `Preferred voice unavailable; browser default is set to ${VOICE_CONFIG.language}.`;
-        utterance.onend = onFinished;
+        const expectedSpeechMs = demoSteps[index].narration.trim().split(/\s+/).length * 60_000 / (125 * VOICE_CONFIG.rate);
+        const speechStartedAt = Date.now();
+        let speechCompleted = false;
+        const completeSpeech = () => {
+          if (speechCompleted || activeRun !== runId || isPaused) return;
+          speechCompleted = true;
+          window.clearTimeout(speechWatchdogTimer);
+          // Keep each screen visible for its estimated narration time, even if
+          // the browser voice reports an early end for a canceled utterance.
+          const remainingMs = Math.max(0, expectedSpeechMs - (Date.now() - speechStartedAt));
+          advanceTimer = window.setTimeout(onFinished, remainingMs);
+        };
+        utterance.onend = completeSpeech;
         utterance.onerror = event => {
-          if (!['canceled', 'interrupted'].includes(event.error)) {
-            setState('Voice playback failed', 'ready');
-            caption.textContent = `Browser voice error: ${event.error}`;
-            updateButtons();
+          if (activeRun === runId && !isPaused) {
+            setState('Continuing walkthrough', 'playing');
+            voiceNote.textContent = `Browser voice stopped (${event.error}); continuing the guided walkthrough.`;
+            completeSpeech();
           }
         };
+        speechWatchdogTimer = window.setTimeout(() => {
+          if (activeRun === runId && !isPaused && currentStep === index) {
+            voiceNote.textContent = 'Browser voice did not finish this line; continuing the guided walkthrough.';
+            completeSpeech();
+          }
+        }, expectedSpeechMs + 8000);
         speechSynthesis.speak(utterance);
       }
 
