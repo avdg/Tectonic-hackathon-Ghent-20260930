@@ -5,6 +5,8 @@ import { handleApiRequest } from './routes/api.js';
 
 const port = Number(process.env.PORT) || 3000;
 const indexFile = fileURLToPath(new URL('../public/index.html', import.meta.url));
+const demoFile = fileURLToPath(new URL('../public/demo.html', import.meta.url));
+const recorderFile = fileURLToPath(new URL('../public/recorder.html', import.meta.url));
 
 const server = createServer(async (request, response) => {
   let pathname;
@@ -17,7 +19,15 @@ const server = createServer(async (request, response) => {
 
   if (handleApiRequest(request, response, pathname)) return;
 
-  if (pathname !== '/') {
+  const pageFile = pathname === '/' || pathname.startsWith('/app/')
+    ? indexFile
+    : pathname === '/demo' || pathname === '/demo.html'
+      ? demoFile
+      : pathname === '/recorder' || pathname === '/recorder.html'
+        ? recorderFile
+        : null;
+
+  if (!pageFile) {
     response.writeHead(404).end('Not found');
     return;
   }
@@ -28,7 +38,7 @@ const server = createServer(async (request, response) => {
   }
 
   try {
-    const content = await readFile(indexFile);
+    const content = await readFile(pageFile);
     response.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
     response.end(request.method === 'HEAD' ? undefined : content);
   } catch (error) {

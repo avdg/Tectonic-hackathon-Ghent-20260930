@@ -15,6 +15,26 @@ Open <http://localhost:3000>. The starter page checks `GET /api/health` to confi
 
 Use `npm start` to run without file watching. Set `PORT` to change the port.
 
+## App and guided demo
+
+- The normal app is at <http://localhost:3000/>.
+- The separate guided demo is at <http://localhost:3000/demo>.
+- The recording controller opens in a separate window at <http://localhost:3000/recorder>, so it can sit on another screen.
+- The demo's iframe loads each app screen by URL. Its `step` query parameter selects a demo step, and each screen URL's `fixture` parameter selects its hardcoded sample data.
+- The demo currently uses placeholder screens and narration. Replace these after the product situation and wireframes are agreed.
+- The demo conservatively estimates narration and recording duration before recording. Keep the submitted video strictly under three minutes; target an estimate below 2:30 to leave room for timing variation. Recording itself has no forced duration cap.
+
+### Record the hackathon video
+
+1. Open <http://localhost:3000/demo> in a current version of Chrome or Edge.
+2. Click the three-dot menu at the top-right of the app preview, then **Open recording controls**. Move the new window to another screen if available.
+3. On the demo page, open the three-dot menu and click **Start recording**. In the browser's sharing picker, select the screen to record and enable system audio; tab audio may not include browser speech synthesis. Once capture starts, a visible 3-second countdown gives you time to settle before the narrated walkthrough starts automatically. The separate window is for monitoring/stopping, not starting capture.
+4. Switch to the demo and click **Show demo**. The recording status and elapsed time are also available under the demo page's three-dot menu. Capture stops eight seconds after the narration completes.
+5. To finish early, click **Stop & download** in either the recording window or the demo page's three-dot menu. Review the WebM to check that the narration was captured and the video is under three minutes.
+6. Upload the finished video to YouTube, then add its link to this README and the Builderbase submission.
+
+The browser requires a screen-sharing choice for every recording. Choose the demo tab, not the separate recording-control window.
+
 ## Structure
 
 - `public/` — the starter HTML page.

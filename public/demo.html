@@ -1,0 +1,604 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#f5f4f0" />
+    <title>Guided demo</title>
+    <style>
+      :root {
+        color-scheme: light;
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        color: #20231f;
+        background: #f5f4f0;
+        font-synthesis: none;
+        text-rendering: optimizeLegibility;
+      }
+
+      * { box-sizing: border-box; }
+      body { min-width: 320px; min-height: 100vh; margin: 0; }
+      button { font: inherit; }
+      .shell { width: min(100% - 2rem, 76rem); margin: 0 auto; padding: 2rem 0 3rem; }
+      .topbar { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 1.5rem; }
+      .brand { margin: 0; color: #526b45; font-size: 0.75rem; font-weight: 750; letter-spacing: 0.13em; text-transform: uppercase; }
+      .live { display: inline-flex; align-items: center; gap: .5rem; color: #666b63; font-size: .875rem; }
+      .live::before { width: .55rem; height: .55rem; border-radius: 50%; background: #9aa197; content: ""; }
+      .live[data-state="playing"]::before { background: #4d853b; box-shadow: 0 0 0 3px #e4efdf; }
+      .heading { display: flex; align-items: end; justify-content: space-between; gap: 2rem; margin-bottom: 1.25rem; }
+      .heading-actions { position: relative; display: flex; flex: 0 0 auto; align-items: center; gap: .55rem; }
+      h1 { margin: 0; font-size: clamp(2rem, 5vw, 3.25rem); letter-spacing: -.055em; line-height: 1.04; }
+      .intro { max-width: 35rem; margin: .8rem 0 0; color: #62675f; line-height: 1.6; }
+      .primary, .control { min-height: 2.75rem; padding: .7rem 1rem; border: 1px solid #d8dbd3; border-radius: .7rem; background: #fff; color: #263023; cursor: pointer; font-weight: 650; }
+      .primary { flex: 0 0 auto; border-color: #375d2d; background: #375d2d; color: white; }
+      button:disabled { cursor: not-allowed; opacity: .48; }
+      button:focus-visible { outline: 3px solid #91b57e; outline-offset: 3px; }
+      .frame-wrap { overflow: hidden; border: 1px solid #d9dbd4; border-radius: 1rem; background: white; box-shadow: 0 1rem 2.5rem rgb(32 35 31 / 7%); }
+      .frame-head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; min-height: 3.5rem; padding: .7rem 1rem; border-bottom: 1px solid #e7e8e2; }
+      .frame-label { overflow: hidden; color: #646961; font-size: .875rem; text-overflow: ellipsis; white-space: nowrap; }
+      iframe { display: block; width: 100%; height: min(60vh, 34rem); min-height: 24rem; border: 0; background: #f7f8f5; }
+      .player { display: grid; grid-template-columns: minmax(10rem, 1fr) auto; gap: 1rem 2rem; align-items: center; margin-top: 1rem; padding: 1.1rem 1.25rem; border: 1px solid #dedfd8; border-radius: .9rem; background: #fff; }
+      .track { min-width: 0; }
+      .step { margin: 0 0 .35rem; color: #526b45; font-size: .75rem; font-weight: 750; letter-spacing: .1em; text-transform: uppercase; }
+      .caption { margin: 0; color: #4e534b; font-size: .95rem; line-height: 1.5; }
+      .controls { display: flex; flex-wrap: wrap; gap: .5rem; }
+      .record-button { border-color: #d8b8b5; color: #8b332c; }
+      .record-button[data-recording="true"] { border-color: #a83c32; background: #a83c32; color: white; }
+      .footnote { margin: .75rem .15rem 0; color: #73776f; font-size: .8rem; line-height: 1.5; }
+      .recording-tools { position: relative; color: #62675f; }
+      .recording-tools summary { display: grid; width: 2.5rem; height: 2.5rem; place-items: center; border: 1px solid #d8dbd3; border-radius: .7rem; background: #fff; color: #4e534b; cursor: pointer; font-size: 1.35rem; font-weight: 700; line-height: 1; }
+      .recording-tools summary:focus-visible { outline: 3px solid #91b57e; outline-offset: 2px; }
+      .recording-panel { position: absolute; z-index: 5; top: calc(100% + .5rem); right: 0; width: min(22rem, calc(100vw - 2rem)); padding: 1rem; border: 1px solid #dedfd8; border-radius: .8rem; background: #fff; box-shadow: 0 .8rem 2rem rgb(32 35 31 / 14%); }
+      @media (max-width: 650px) {
+        .shell { padding-top: 1.25rem; }
+        .heading { display: block; }
+        .heading-actions { margin-top: 1rem; }
+        .player { grid-template-columns: 1fr; }
+        .controls { grid-row: 1; }
+        iframe { height: 55vh; min-height: 20rem; }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="shell">
+      <header class="topbar">
+        <p class="brand">Product walkthrough</p>
+        <p class="live" id="voice-state" role="status" aria-live="polite" data-state="ready">Ready</p>
+      </header>
+
+      <section class="heading" aria-labelledby="page-title">
+        <div>
+          <h1 id="page-title">See how it works</h1>
+          <p class="intro">Start a short guided tour. The app preview and voice controls stay together while the demo moves between screens.</p>
+        </div>
+        <div class="heading-actions">
+          <button class="primary" id="show-demo" type="button">▶&nbsp; Show demo</button>
+        </div>
+      </section>
+
+      <section class="frame-wrap" aria-label="App preview">
+        <div class="frame-head">
+          <span class="frame-label" id="frame-label">App preview · Overview</span>
+          <details class="recording-tools" id="recording-tools-menu">
+            <summary aria-label="Recording tools" title="Recording tools"><span aria-hidden="true">⋯</span></summary>
+            <div class="recording-panel">
+              <p class="step">Recording tools</p>
+              <button class="control" id="open-recorder" type="button">Open recording controls</button>
+              <p class="footnote" id="recorder-window-note">Opens in a separate window so you can move the controls to another screen.</p>
+              <button class="control record-button" id="start-recording-demo" type="button">●&nbsp; Start recording</button>
+              <p class="footnote">Choose the screen and enable system audio. Narration starts automatically when recording begins.</p>
+              <p class="footnote" id="recording-status" role="status" aria-live="polite">Not recording.</p>
+              <p class="footnote" id="recording-elapsed" hidden>00:00 elapsed</p>
+              <button class="control" id="stop-recording-demo" type="button" disabled>Stop &amp; download</button>
+            </div>
+          </details>
+        </div>
+        <iframe id="demo-frame" title="Guided demo app preview" sandbox="allow-scripts allow-same-origin"></iframe>
+      </section>
+
+      <section class="player" aria-label="Demo narration controls">
+        <div class="track">
+          <p class="step" id="step-label">Ready when you are</p>
+          <p class="caption" id="caption">Press “Show demo” to start the walkthrough.</p>
+        </div>
+        <div class="controls">
+          <button class="control" id="pause-demo" type="button" disabled>Pause</button>
+          <button class="control" id="resume-demo" type="button" disabled>Resume</button>
+          <button class="control" id="stop-demo" type="button" disabled>Stop</button>
+        </div>
+      </section>
+      <p class="footnote" id="voice-note">Narration uses the browser’s English voice. Switching to another browser tab pauses it.</p>
+      <p class="footnote" id="duration-estimate"></p>
+    </main>
+
+    <script type="module">
+      // Replace these placeholder views and narration when the wireframes are ready.
+      const demoSteps = [
+        {
+          id: 'overview',
+          title: 'Overview',
+          url: '/app/overview?fixture=demo-overview',
+          narration: 'Welcome to the demo. This is the overview screen. It gives people a clear place to begin.'
+        },
+        {
+          id: 'feature',
+          title: 'Feature',
+          url: '/app/feature?fixture=demo-feature',
+          narration: 'Next, we will look at the main feature. This is where the product helps with the central task.'
+        },
+        {
+          id: 'outcome',
+          title: 'Outcome',
+          url: '/app/outcome?fixture=demo-outcome',
+          narration: 'Finally, here is the outcome. The user can review what happened and decide what to do next.'
+        }
+      ];
+
+      // Optional integration point. Set this to the custom endpoint URL once its
+      // contract is known. The endpoint should return playable audio in its body.
+      const VOICE_ENDPOINT = '';
+
+      // Browser speech settings; change these values here to configure the voice.
+      const VOICE_CONFIG = Object.freeze({
+        name: 'Microsoft Hazel - English (United Kingdom)',
+        language: 'en-GB',
+        rate: 0.92,
+        pitch: 1
+      });
+
+      function estimateRecordingSeconds() {
+        const wordCount = demoSteps.reduce((count, step) => count + step.narration.trim().split(/\s+/).length, 0);
+        // Use a deliberately slow speaking-rate estimate to leave headroom.
+        const speechSeconds = wordCount * 60 / (125 * VOICE_CONFIG.rate);
+        const transitionsSeconds = Math.max(0, demoSteps.length - 1) * 0.45;
+        return Math.ceil(speechSeconds + transitionsSeconds + 6 + 8);
+      }
+
+      function formatDuration(totalSeconds) {
+        const minutes = Math.floor(totalSeconds / 60);
+        const seconds = String(totalSeconds % 60).padStart(2, '0');
+        return `${minutes}:${seconds}`;
+      }
+
+      const frame = document.querySelector('#demo-frame');
+      const frameLabel = document.querySelector('#frame-label');
+      const state = document.querySelector('#voice-state');
+      const stepLabel = document.querySelector('#step-label');
+      const caption = document.querySelector('#caption');
+      const showButton = document.querySelector('#show-demo');
+      const pauseButton = document.querySelector('#pause-demo');
+      const resumeButton = document.querySelector('#resume-demo');
+      const stopButton = document.querySelector('#stop-demo');
+      const openRecorderButton = document.querySelector('#open-recorder');
+      const startRecordingButton = document.querySelector('#start-recording-demo');
+      const voiceNote = document.querySelector('#voice-note');
+      const durationEstimate = document.querySelector('#duration-estimate');
+      const recorderWindowNote = document.querySelector('#recorder-window-note');
+      const recordingToolsMenu = document.querySelector('#recording-tools-menu');
+      const recordingStatus = document.querySelector('#recording-status');
+      const recordingElapsed = document.querySelector('#recording-elapsed');
+      const stopRecordingButton = document.querySelector('#stop-recording-demo');
+
+      const estimatedRecordingSeconds = estimateRecordingSeconds();
+      durationEstimate.textContent = estimatedRecordingSeconds >= 150
+        ? `Estimated recording: about ${formatDuration(estimatedRecordingSeconds)}. Shorten the narration: this is near the strict 3:00 submission maximum, and the estimate leaves little buffer.`
+        : `Estimated recording: about ${formatDuration(estimatedRecordingSeconds)}, including setup and the 8-second ending. Aim below 2:30 to leave margin under the strict 3:00 maximum.`;
+
+      let currentStep = -1;
+      let audio = null;
+      let audioUrl = null;
+      let isPaused = false;
+      let runId = 0;
+      let advanceTimer = null;
+      let usingSpeech = false;
+      let recorderWindow = null;
+      let captureStream = null;
+      let controllerReady = false;
+      let mediaRecorder = null;
+      let recordingChunks = [];
+      let recordingTimer = null;
+      let narrationFinishTimer = null;
+      let recordingCountdownTimer = null;
+      let recordingElapsedSeconds = 0;
+      let recordingHasAudio = false;
+      const RECORDING_END_GRACE_SECONDS = 8;
+
+      const setState = (text, value = 'ready') => {
+        state.textContent = text;
+        state.dataset.state = value;
+      };
+
+      function notifyRecorder(type, details = {}) {
+        if (recorderWindow && !recorderWindow.closed) {
+          recorderWindow.postMessage({ type, ...details }, window.location.origin);
+        }
+      }
+
+      function setRecordingElapsed(seconds) {
+        const minutes = String(Math.floor(seconds / 60)).padStart(2, '0');
+        const remainder = String(seconds % 60).padStart(2, '0');
+        recordingElapsed.hidden = false;
+        recordingElapsed.textContent = `${minutes}:${remainder} elapsed`;
+      }
+
+      function finishRecording() {
+        if (mediaRecorder?.state !== 'recording') return;
+        window.clearInterval(recordingTimer);
+        window.clearInterval(narrationFinishTimer);
+        window.clearInterval(recordingCountdownTimer);
+        recordingTimer = null;
+        narrationFinishTimer = null;
+        recordingCountdownTimer = null;
+        mediaRecorder.stop();
+        recordingStatus.textContent = 'Preparing video for download…';
+        stopRecordingButton.disabled = true;
+        notifyRecorder('recording-finishing');
+      }
+
+      function beginRecording(stream) {
+        captureStream = stream;
+        recordingHasAudio = stream.getAudioTracks().length > 0;
+        const mimeType = [
+          'video/webm;codecs=vp9,opus',
+          'video/webm;codecs=vp8,opus',
+          'video/webm'
+        ].find(type => MediaRecorder.isTypeSupported(type));
+        try {
+          mediaRecorder = new MediaRecorder(stream, mimeType ? { mimeType, videoBitsPerSecond: 5_000_000 } : undefined);
+        } catch (error) {
+          stream.getTracks().forEach(track => track.stop());
+          captureStream = null;
+          mediaRecorder = null;
+          throw error;
+        }
+        recordingChunks = [];
+        mediaRecorder.addEventListener('dataavailable', event => {
+          if (event.data.size) recordingChunks.push(event.data);
+        });
+        mediaRecorder.addEventListener('stop', () => {
+          const blob = new Blob(recordingChunks, { type: mediaRecorder?.mimeType || 'video/webm' });
+          const downloadUrl = URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          const timestamp = new Date().toISOString().replaceAll(':', '-').replace(/\.\d{3}Z$/, 'Z');
+          link.href = downloadUrl;
+          link.download = `guided-demo-${timestamp}.webm`;
+          document.body.append(link);
+          link.click();
+          link.remove();
+          window.setTimeout(() => URL.revokeObjectURL(downloadUrl), 60_000);
+          captureStream?.getTracks().forEach(track => track.stop());
+          captureStream = null;
+          recordingChunks = [];
+          mediaRecorder = null;
+          startRecordingButton.disabled = false;
+          stopRecordingButton.disabled = true;
+          recordingStatus.textContent = recordingHasAudio
+            ? 'Video downloaded. Check that the narration is audible.'
+            : 'Video downloaded without audio; retry with system audio enabled.';
+          notifyRecorder('recording-finished', { hasAudio: recordingHasAudio });
+        }, { once: true });
+        stream.getVideoTracks()[0]?.addEventListener('ended', finishRecording, { once: true });
+        mediaRecorder.start(1000);
+        recordingElapsedSeconds = 0;
+        setRecordingElapsed(0);
+        stopRecordingButton.disabled = false;
+        recordingStatus.textContent = recordingHasAudio
+          ? 'Recording the selected screen with audio.'
+          : 'Recording video only; enable system audio in the sharing picker to capture narration.';
+        notifyRecorder('recording-started', { hasAudio: recordingHasAudio });
+        recordingTimer = window.setInterval(() => {
+          recordingElapsedSeconds += 1;
+          setRecordingElapsed(recordingElapsedSeconds);
+          notifyRecorder('recording-progress', { elapsedSeconds: recordingElapsedSeconds });
+        }, 1000);
+        // Leave a visible three-second pre-roll so the team can settle on the
+        // chosen screen before the welcome narration begins.
+        let countdown = 3;
+        caption.textContent = `Get ready… the welcome starts in ${countdown}.`;
+        stepLabel.textContent = 'Recording will start shortly';
+        setState('Get ready', 'ready');
+        recordingCountdownTimer = window.setInterval(() => {
+          countdown -= 1;
+          if (countdown <= 0) {
+            window.clearInterval(recordingCountdownTimer);
+            recordingCountdownTimer = null;
+            if (currentStep < 0) startDemo();
+          } else {
+            caption.textContent = `Get ready… the welcome starts in ${countdown}.`;
+          }
+        }, 1000);
+      }
+
+      function waitForVoices() {
+        const availableVoices = speechSynthesis.getVoices();
+        if (availableVoices.length) return Promise.resolve(availableVoices);
+
+        return new Promise(resolve => {
+          let timeoutId;
+          const finish = () => {
+            speechSynthesis.removeEventListener('voiceschanged', onVoicesChanged);
+            window.clearTimeout(timeoutId);
+            resolve(speechSynthesis.getVoices());
+          };
+          const onVoicesChanged = () => {
+            if (speechSynthesis.getVoices().length) finish();
+          };
+
+          speechSynthesis.addEventListener('voiceschanged', onVoicesChanged);
+          timeoutId = window.setTimeout(finish, 2000);
+        });
+      }
+
+      function showStep(index) {
+        const step = demoSteps[index];
+        currentStep = index;
+        frameLabel.textContent = `App preview · ${step.title}`;
+        stepLabel.textContent = `Step ${index + 1} of ${demoSteps.length} · ${step.title}`;
+        caption.textContent = step.narration;
+        frame.src = step.url;
+        history.replaceState(null, '', `/demo?step=${encodeURIComponent(step.id)}`);
+      }
+
+      function updateButtons() {
+        const active = currentStep >= 0 && currentStep < demoSteps.length;
+        pauseButton.disabled = !active || isPaused;
+        resumeButton.disabled = !active || !isPaused;
+        stopButton.disabled = currentStep < 0;
+        showButton.textContent = currentStep >= 0 && !isPaused ? '↻  Restart demo' : '▶  Show demo';
+      }
+
+      function cleanupAudio() {
+        window.clearTimeout(advanceTimer);
+        advanceTimer = null;
+        usingSpeech = false;
+        if (audio) {
+          audio.pause();
+          audio.src = '';
+          audio = null;
+        }
+        if (audioUrl) {
+          URL.revokeObjectURL(audioUrl);
+          audioUrl = null;
+        }
+        speechSynthesis.cancel();
+      }
+
+      async function speakStep(index, activeRun) {
+        if (activeRun !== runId || isPaused) return;
+        if (index >= demoSteps.length) {
+          setState('Demo complete', 'ready');
+          stepLabel.textContent = 'Demo complete';
+          caption.textContent = 'You can restart the walkthrough whenever you like.';
+          currentStep = -1;
+          updateButtons();
+          if (mediaRecorder?.state === 'recording') {
+            let secondsLeft = RECORDING_END_GRACE_SECONDS;
+            recordingStatus.textContent = `Narration complete; saving in ${secondsLeft} seconds.`;
+            notifyRecorder('recording-finalizing', { secondsLeft });
+            window.clearInterval(narrationFinishTimer);
+            narrationFinishTimer = window.setInterval(() => {
+              secondsLeft -= 1;
+              if (secondsLeft <= 0) finishRecording();
+              else {
+                recordingStatus.textContent = `Narration complete; saving in ${secondsLeft} seconds.`;
+                notifyRecorder('recording-finalizing', { secondsLeft });
+              }
+            }, 1000);
+          }
+          return;
+        }
+
+        showStep(index);
+        updateButtons();
+        setState('Speaking', 'playing');
+
+        const onFinished = () => {
+          if (activeRun !== runId || isPaused) return;
+          usingSpeech = false;
+          cleanupAudio();
+          advanceTimer = window.setTimeout(() => speakStep(index + 1, activeRun), 450);
+        };
+
+        if (VOICE_ENDPOINT) {
+          try {
+            const response = await fetch(VOICE_ENDPOINT, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ text: demoSteps[index].narration, index, title: demoSteps[index].title })
+            });
+            if (!response.ok) throw new Error(`Voice endpoint returned ${response.status}`);
+            if (activeRun !== runId || isPaused) return;
+            audioUrl = URL.createObjectURL(await response.blob());
+            audio = new Audio(audioUrl);
+            audio.onended = onFinished;
+            audio.onerror = () => {
+              setState('Voice playback failed', 'ready');
+              caption.textContent = 'The custom voice audio could not be played. Check the endpoint response format.';
+              updateButtons();
+            };
+            await audio.play();
+            return;
+          } catch (error) {
+            console.error('[Demo voice] Custom endpoint failed:', error);
+            setState('Using browser voice', 'playing');
+            voiceNote.textContent = 'The custom voice endpoint was unavailable; using the browser voice for this step.';
+          }
+        }
+
+        const utterance = new SpeechSynthesisUtterance(demoSteps[index].narration);
+        utterance.onstart = () => { usingSpeech = true; };
+        utterance.lang = VOICE_CONFIG.language;
+        utterance.rate = VOICE_CONFIG.rate;
+        utterance.pitch = VOICE_CONFIG.pitch;
+        const voices = await waitForVoices();
+        if (activeRun !== runId || isPaused) return;
+        const preferredVoice = voices.find(voice => voice.name === VOICE_CONFIG.name)
+          || voices.find(voice => voice.lang.toLowerCase() === VOICE_CONFIG.language.toLowerCase());
+        if (preferredVoice) utterance.voice = preferredVoice;
+        voiceNote.textContent = preferredVoice
+          ? `Browser voice: ${preferredVoice.name} · rate ${VOICE_CONFIG.rate} · pitch ${VOICE_CONFIG.pitch}.`
+          : `Preferred voice unavailable; browser default is set to ${VOICE_CONFIG.language}.`;
+        utterance.onend = onFinished;
+        utterance.onerror = event => {
+          if (!['canceled', 'interrupted'].includes(event.error)) {
+            setState('Voice playback failed', 'ready');
+            caption.textContent = `Browser voice error: ${event.error}`;
+            updateButtons();
+          }
+        };
+        speechSynthesis.speak(utterance);
+      }
+
+      function startDemo() {
+        runId += 1;
+        window.clearInterval(recordingCountdownTimer);
+        recordingCountdownTimer = null;
+        window.clearInterval(narrationFinishTimer);
+        narrationFinishTimer = null;
+        cleanupAudio();
+        isPaused = false;
+        notifyRecorder('demo-narration-started');
+        if (currentStep < 0) currentStep = 0;
+        updateButtons();
+        speakStep(currentStep, runId);
+      }
+
+      function stopDemo(message = 'Stopped') {
+        runId += 1;
+        cleanupAudio();
+        isPaused = false;
+        currentStep = -1;
+        setState(message, 'ready');
+        stepLabel.textContent = 'Ready when you are';
+        caption.textContent = 'Press “Show demo” to start the walkthrough.';
+        history.replaceState(null, '', '/demo');
+        frame.src = demoSteps[0].url;
+        frameLabel.textContent = 'App preview · Overview';
+        updateButtons();
+      }
+
+      showButton.addEventListener('click', startDemo);
+      pauseButton.addEventListener('click', () => {
+        if (currentStep < 0) return;
+        isPaused = true;
+        if (advanceTimer) {
+          window.clearTimeout(advanceTimer);
+          advanceTimer = null;
+        }
+        speechSynthesis.pause();
+        if (audio) audio.pause();
+        setState('Paused', 'ready');
+        updateButtons();
+      });
+      resumeButton.addEventListener('click', () => {
+        if (currentStep < 0) return;
+        isPaused = false;
+        if (audio) {
+          audio.play();
+          setState('Speaking', 'playing');
+          updateButtons();
+        } else if (usingSpeech) {
+          speechSynthesis.resume();
+          setState('Speaking', 'playing');
+          updateButtons();
+        } else {
+          runId += 1;
+          speakStep(currentStep, runId);
+        }
+        updateButtons();
+      });
+      stopButton.addEventListener('click', () => stopDemo());
+
+      openRecorderButton.addEventListener('click', () => {
+        recordingToolsMenu.open = false;
+        controllerReady = false;
+        recorderWindow = window.open(
+          '/recorder',
+          'demo-recording-controller',
+          'popup,width=440,height=520,resizable=yes'
+        );
+        if (recorderWindow) {
+          recorderWindow.focus();
+          recorderWindowNote.textContent = 'Recording controls opened in a separate window. Move it to another screen if you like.';
+        } else {
+          recorderWindowNote.textContent = 'The browser blocked the control window. Allow popups for this site, then try again.';
+        }
+      });
+
+      startRecordingButton.addEventListener('click', async () => {
+        // Keep getDisplayMedia directly inside this click gesture. Opening a
+        // popup first can consume the transient activation required by browsers.
+        recordingToolsMenu.open = false;
+        if (!navigator.mediaDevices?.getDisplayMedia || !window.MediaRecorder) {
+          recordingStatus.textContent = 'This browser does not support screen recording.';
+          return;
+        }
+        startRecordingButton.disabled = true;
+        recordingStatus.textContent = 'Choose the screen to record and enable system audio.';
+        try {
+          const stream = await navigator.mediaDevices.getDisplayMedia({
+            video: { frameRate: { ideal: 30, max: 30 }, displaySurface: 'monitor' },
+            audio: true,
+            systemAudio: 'include',
+            selfBrowserSurface: 'exclude'
+          });
+          beginRecording(stream);
+        } catch (error) {
+          captureStream?.getTracks().forEach(track => track.stop());
+          captureStream = null;
+          startRecordingButton.disabled = false;
+          recordingStatus.textContent = error.name === 'NotAllowedError'
+            ? 'Capture was cancelled. Open Recording tools and try again.'
+            : (error.message || 'Could not start capture. Use current Chrome or Edge on localhost or HTTPS.');
+        }
+      });
+
+      window.addEventListener('message', event => {
+        if (event.origin !== window.location.origin || event.source !== recorderWindow) return;
+        const { type } = event.data || {};
+
+        if (type === 'recorder-controller-ready') {
+          controllerReady = true;
+          if (mediaRecorder?.state === 'recording') {
+            notifyRecorder('recording-started', { hasAudio: recordingHasAudio });
+            notifyRecorder('recording-progress', { elapsedSeconds: recordingElapsedSeconds });
+          }
+          return;
+        }
+        if (type === 'request-stop-recording') finishRecording();
+      });
+
+      stopRecordingButton.addEventListener('click', () => {
+        recordingToolsMenu.open = false;
+        finishRecording();
+      });
+
+      window.addEventListener('beforeunload', () => {
+        window.clearInterval(recordingTimer);
+        window.clearInterval(narrationFinishTimer);
+        window.clearInterval(recordingCountdownTimer);
+        captureStream?.getTracks().forEach(track => track.stop());
+      });
+
+      document.addEventListener('visibilitychange', () => {
+        if (document.hidden && currentStep >= 0 && !isPaused) {
+          isPaused = true;
+          if (advanceTimer) {
+            window.clearTimeout(advanceTimer);
+            advanceTimer = null;
+          }
+          speechSynthesis.pause();
+          if (audio) audio.pause();
+          setState('Paused · tab hidden', 'ready');
+          caption.textContent = `${demoSteps[currentStep].narration} Return to this tab and press Resume to continue.`;
+          updateButtons();
+        }
+      });
+
+      const requestedStep = new URLSearchParams(window.location.search).get('step');
+      const initialStep = Math.max(0, demoSteps.findIndex(step => step.id === requestedStep));
+      showStep(initialStep);
+      stepLabel.textContent = 'Ready when you are';
+      caption.textContent = 'Press “Show demo” to narrate this screen.';
+    </script>
+  </body>
+</html>

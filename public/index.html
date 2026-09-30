@@ -22,16 +22,39 @@
       h1 { margin: 0; font-size: clamp(2rem, 7vw, 3.5rem); letter-spacing: -0.05em; line-height: 1.05; }
       .intro { max-width: 34rem; margin: 1.25rem 0 2rem; color: #5d625a; font-size: 1.125rem; line-height: 1.6; }
       .status { display: inline-flex; margin: 0; padding: 0.5rem 0.75rem; border-radius: 999px; background: #edf3e9; color: #38552c; font-size: 0.875rem; }
+      .actions { display: flex; flex-wrap: wrap; align-items: center; gap: .75rem; }
+      .demo-link { display: inline-flex; padding: .75rem 1rem; border-radius: .7rem; background: #375d2d; color: white; font-weight: 650; text-decoration: none; }
+      .demo-link:focus-visible { outline: 3px solid #91b57e; outline-offset: 3px; }
     </style>
   </head>
   <body>
     <main class="page">
-      <p class="eyebrow">Hackathon prototype</p>
-      <h1>Your starting point</h1>
-      <p class="intro">The project is ready for the product spec and wireframes to shape the experience.</p>
-      <p class="status" id="server-status" role="status">Checking the server…</p>
+      <p class="eyebrow">Hackathon prototype · App</p>
+      <h1 id="app-title">Your starting point</h1>
+      <p class="intro" id="app-content">This is the normal app. The product screens will be shaped by the agreed situation, design, and wireframes.</p>
+      <div class="actions">
+        <p class="status" id="server-status" role="status">Checking the server…</p>
+        <a class="demo-link" href="/demo">Open guided demo</a>
+      </div>
     </main>
     <script type="module">
+      const appTitle = document.querySelector('#app-title');
+      const appContent = document.querySelector('#app-content');
+      const currentUrl = new URL(window.location.href);
+      const fixture = currentUrl.searchParams.get('fixture') || 'default';
+      const appViews = {
+        overview: ['Overview', 'Placeholder overview screen. Replace this with the designed app page and its hardcoded fixture data.'],
+        feature: ['Feature detail', 'Placeholder feature screen. Replace this with the designed feature and its hardcoded fixture data.'],
+        outcome: ['Outcome', 'Placeholder outcome screen. Replace this with the designed result and its hardcoded fixture data.']
+      };
+      const routeName = currentUrl.pathname.split('/').filter(Boolean).at(-1);
+      if (currentUrl.pathname.startsWith('/app/') && appViews[routeName]) {
+        const [title, description] = appViews[routeName];
+        document.title = `${title} · Hackathon prototype`;
+        appTitle.textContent = title;
+        appContent.textContent = `${description} Fixture: ${fixture}.`;
+      }
+
       const status = document.querySelector('#server-status');
 
       try {
