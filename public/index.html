@@ -16,56 +16,50 @@
       }
 
       * { box-sizing: border-box; }
-      body { min-width: 320px; min-height: 100vh; margin: 0; display: grid; place-items: center; }
-      .page { width: min(100% - 2rem, 42rem); padding: 3rem; border: 1px solid #deded5; border-radius: 1rem; background: #fff; box-shadow: 0 1rem 3rem rgb(32 35 31 / 6%); }
-      .eyebrow { margin: 0 0 1rem; color: #526b45; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; }
-      h1 { margin: 0; font-size: clamp(2rem, 7vw, 3.5rem); letter-spacing: -0.05em; line-height: 1.05; }
-      .intro { max-width: 34rem; margin: 1.25rem 0 2rem; color: #5d625a; font-size: 1.125rem; line-height: 1.6; }
-      .status { display: inline-flex; margin: 0; padding: 0.5rem 0.75rem; border-radius: 999px; background: #edf3e9; color: #38552c; font-size: 0.875rem; }
-      .actions { display: flex; flex-wrap: wrap; align-items: center; gap: .75rem; }
-      .demo-link { display: inline-flex; padding: .75rem 1rem; border-radius: .7rem; background: #375d2d; color: white; font-weight: 650; text-decoration: none; }
-      .demo-link:focus-visible { outline: 3px solid #91b57e; outline-offset: 3px; }
+      body { min-width: 320px; min-height: 100vh; margin: 0; background:#edf4f8; color:#003665; }
+      .page { width: min(100% - 2rem, 42rem); margin:2rem auto; overflow:hidden; border:1px solid #d8e3eb; border-radius:1.5rem; background:#fff; box-shadow:0 1rem 3rem rgb(0 54 101 / 9%); }
+      .hero { padding:1.5rem 2rem 1.75rem; background:#e6f7fd; }
+      .top { display:flex; align-items:center; justify-content:space-between; color:#4d7293; font-size:.85rem; }
+      .avatar { display:grid; width:2.6rem; height:2.6rem; place-items:center; border-radius:50%; background:#003665; color:white; font-weight:700; }
+      h1 { margin:.6rem 0 .2rem; font-size:2rem; letter-spacing:-.04em; }
+      .intro { margin:0; color:#4d7293; line-height:1.5; }
+      .content { display:grid; gap:.8rem; padding:1.25rem 2rem 1.5rem; }
+      .eyebrow { margin:0 0 .35rem; color:#4d7293; font-size:.75rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase; }
+      .card { padding:1rem; border:1px solid #e0e7ed; border-radius:.9rem; background:#fff; }
+      .card h2 { margin:0 0 .35rem; font-size:1rem; }
+      .card p { margin:.25rem 0; color:#4d7293; line-height:1.45; }
+      .money { font-size:1.8rem; font-weight:750; }
+      .pill { display:inline-block; margin:.2rem .25rem .1rem 0; padding:.35rem .65rem; border-radius:99px; background:#e6f7fd; color:#006699; font-size:.8rem; }
+      .bar { height:.55rem; margin-top:.65rem; overflow:hidden; border-radius:99px; background:#e6f7fd; }
+      .bar i { display:block; width:50%; height:100%; border-radius:99px; background:#00aeef; }
+      @media(max-width:520px){.hero{padding:1.25rem}.content{padding:1rem 1.25rem 1.25rem}.page{margin:1rem auto}}
     </style>
   </head>
   <body>
     <main class="page">
-      <p class="eyebrow">Hackathon prototype · App</p>
-      <h1 id="app-title">Your starting point</h1>
-      <p class="intro" id="app-content">This is the normal app. The product screens will be shaped by the agreed situation, design, and wireframes.</p>
-      <div class="actions">
-        <p class="status" id="server-status" role="status">Checking the server…</p>
-        <a class="demo-link" href="/demo">Open guided demo</a>
-      </div>
+      <section id="app-view"></section>
     </main>
     <script type="module">
-      const appTitle = document.querySelector('#app-title');
-      const appContent = document.querySelector('#app-content');
       const currentUrl = new URL(window.location.href);
       const fixture = currentUrl.searchParams.get('fixture') || 'default';
-      const appViews = {
-        overview: ['Overview', 'Placeholder overview screen. Replace this with the designed app page and its hardcoded fixture data.'],
-        feature: ['Feature detail', 'Placeholder feature screen. Replace this with the designed feature and its hardcoded fixture data.'],
-        outcome: ['Outcome', 'Placeholder outcome screen. Replace this with the designed result and its hardcoded fixture data.']
+      const data = {
+        baseline:['Your money, at a glance','Sarah’s personal baseline','€ 2,900 salary · € 2,050 usual spending · € 250 saved monthly','Compass learns Sarah’s own normal pattern over six months.'],
+        'week-one':['A new kind of spending','Furniture store · New','Spending pace +12% · Change confidence 16%','One signal is not a story. Compass notices and waits.'],
+        'week-two':['A smaller savings transfer','€ 100 moved to savings','Usual savings € 250 · Change confidence 31%','A second signal appears. Compass still waits.'],
+        'week-three':['A pattern is forming','Spending +16% · Savings down','New categories · Card balance higher · Confidence 49%','Something is changing. The reason is not yet known.'],
+        'light-nudge':['A lot changing lately?','Your spending looks a bit different this month.','You’re doing fine — want to see where you stand, or talk through what’s coming?','No diagnosis. No product push. Just an invitation.'],
+        'check-in':['What’s on your mind right now?','Private · only you see this','Big or small — anything goes.','Talk it through or type instead.'],
+        'she-shares':['Sarah chooses the help','“I’m 14 weeks pregnant! Really happy, but I’m sleeping badly and there’s so much to arrange.”','Moment confirmed · self-declared','How I’m feeling · Money & practical · Both'],
+        health:['Let’s start with you','How are you feeling this week?','Tense. Mostly because I don’t sleep well.','A light check-in helps shape relevant support.'],
+        practical:['Now the practical side','Due mid-April · nursery furniture · doctor costs','Sarah chooses to share account data for this plan.','She can turn this permission off anytime.'],
+        money:['Good news: you’re in good shape for April','€ 520 left / month · € 6,400 savings · 0 missed payments','Baby fund idea: € 600 to start, then € 200/month','€ 2,000 by April · safety net stays above € 5,800'],
+        plan:['Step by step to April','This week: wind down before bed · start baby fund','Next: insurance · employer · childcare','Then: birth allowance · future budget · gentle check-ins'],
+        confirm:['Shall we set this up?','Pick what helps. You can change it anytime.','Baby fund · Calendar reminders · Book an advisor','Next week: a check-in about sleep, not just money.'],
+        'follow-up':['Good morning, Sarah','Baby fund · € 1,000 of € 2,000 · On track for April','KBC Life plan · 3 / 8 · Next: insurance check','Weekly check-in: OK · Compass monitors quietly.']
       };
-      const routeName = currentUrl.pathname.split('/').filter(Boolean).at(-1);
-      if (currentUrl.pathname.startsWith('/app/') && appViews[routeName]) {
-        const [title, description] = appViews[routeName];
-        document.title = `${title} · Hackathon prototype`;
-        appTitle.textContent = title;
-        appContent.textContent = `${description} Fixture: ${fixture}.`;
-      }
-
-      const status = document.querySelector('#server-status');
-
-      try {
-        const response = await fetch('/api/health');
-        if (!response.ok) throw new Error('Server check failed');
-
-        const health = await response.json();
-        status.textContent = health.status === 'ok' ? 'Server is running' : 'Server status unavailable';
-      } catch {
-        status.textContent = 'Could not reach the server';
-      }
+      const [title,subtitle,detail,note] = data[fixture] || data.baseline;
+      document.title = `${title} · KBC Compass`;
+      document.querySelector('#app-view').innerHTML = `<header class="hero"><div class="top"><span class="avatar">S</span><span>KBC Compass · Sarah</span></div><h1>${title}</h1><p class="intro">${subtitle}</p></header><main class="content"><section class="card"><p class="eyebrow">${fixture === 'light-nudge' ? 'KBC Life' : 'Your overview'}</p><h2>${detail}</h2><div class="bar"><i></i></div></section><section class="card"><h2>Compass</h2><p>${note}</p></section></main>`;
     </script>
   </body>
 </html>

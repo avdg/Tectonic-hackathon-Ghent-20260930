@@ -121,26 +121,20 @@
     <div class="recording-countdown" id="recording-countdown-overlay" role="status" aria-live="assertive" hidden><p id="recording-countdown-label">Get ready…</p></div>
 
     <script type="module">
-      // Replace these placeholder views and narration when the wireframes are ready.
       const demoSteps = [
-        {
-          id: 'overview',
-          title: 'Overview',
-          url: '/app/overview?fixture=demo-overview',
-          narration: 'Welcome to the demo. This is the overview screen. It gives people a clear place to begin.'
-        },
-        {
-          id: 'feature',
-          title: 'Feature',
-          url: '/app/feature?fixture=demo-feature',
-          narration: 'Next, we will look at the main feature. This is where the product helps with the central task.'
-        },
-        {
-          id: 'outcome',
-          title: 'Outcome',
-          url: '/app/outcome?fixture=demo-outcome',
-          narration: 'Finally, here is the outcome. The user can review what happened and decide what to do next.'
-        }
+        { id: 'baseline', title: 'Compass learns Sarah’s normal', url: '/app/overview?fixture=baseline', narration: 'Meet Sarah. Compass learns her normal: €2,900 income, €2,050 spending, and regular savings.' },
+        { id: 'week-one', title: 'Week 1 · new spending', url: '/app/overview?fixture=week-one', narration: 'A new kind of purchase appears. One signal is not a story, so Compass waits.' },
+        { id: 'week-two', title: 'Week 2 · smaller savings transfer', url: '/app/overview?fixture=week-two', narration: 'Sarah saves €100 instead of her usual €250. Compass notices, and waits.' },
+        { id: 'week-three', title: 'Week 3 · a pattern is forming', url: '/app/overview?fixture=week-three', narration: 'Spending rises, savings fall, and new categories appear. Something is changing, but Compass does not know why.' },
+        { id: 'light-nudge', title: 'End of month · a light nudge', url: '/app/overview?fixture=light-nudge', narration: 'With no missed payments, Compass checks in gently: A lot changing lately? Want to see where you stand, or talk through what is coming? Just an invitation.' },
+        { id: 'check-in', title: 'Voice check-in', url: '/app/overview?fixture=check-in', narration: 'Sarah chooses to talk. Compass asks: What is on your mind right now?' },
+        { id: 'she-shares', title: 'Sarah chooses the help', url: '/app/overview?fixture=she-shares', narration: 'Sarah says she is fourteen weeks pregnant, happy, but sleeping badly. Compass did not infer this. Sarah shared it, then chose the support she wants.' },
+        { id: 'health', title: 'KBC Health check-in', url: '/app/overview?fixture=health', narration: 'Sarah feels tense and is sleeping poorly. This check-in is not a diagnosis; it helps shape gentle support.' },
+        { id: 'practical', title: 'KBC Banking · the practical side', url: '/app/overview?fixture=practical', narration: 'Sarah explains the nursery and doctor costs, then gives permission to use account data for her plan.' },
+        { id: 'money', title: 'Your money, looking ahead', url: '/app/overview?fixture=money', narration: 'Sarah has €520 left monthly, €6,400 in savings, and no missed payments. Compass suggests €600 to start a baby fund, then €200 monthly toward €2,000 by April.' },
+        { id: 'plan', title: 'One plan', url: '/app/overview?fixture=plan', narration: 'Her plan covers sleep, savings, insurance, maternity leave, childcare, and a future budget.' },
+        { id: 'confirm', title: 'Confirm', url: '/app/overview?fixture=confirm', narration: 'Sarah chooses what to activate. Everything is optional. Compass will check in about her sleep and her money.' },
+        { id: 'follow-up', title: 'A month later', url: '/app/overview?fixture=follow-up', narration: 'A month later, Sarah has saved €1,000. Her check-in is improving, so Compass steps back. It notices change, asks instead of assuming, and offers help at the right moment.' }
       ];
 
       // Optional integration point. Set this to the custom endpoint URL once its
@@ -291,26 +285,14 @@
           notifyRecorder('recording-finished', { hasAudio: recordingHasAudio });
         }, { once: true });
         stream.getVideoTracks()[0]?.addEventListener('ended', finishRecording, { once: true });
-        mediaRecorder.start(1000);
         document.body.classList.add('recording-mode');
-        recordingElapsedSeconds = 0;
-        setRecordingElapsed(0);
-        stopRecordingButton.disabled = false;
-        recordingStatus.textContent = recordingHasAudio
-          ? 'Recording the selected screen with audio.'
-          : 'Recording video only; enable system audio in the sharing picker to capture narration.';
-        notifyRecorder('recording-started', { hasAudio: recordingHasAudio });
-        recordingTimer = window.setInterval(() => {
-          recordingElapsedSeconds += 1;
-          setRecordingElapsed(recordingElapsedSeconds);
-          notifyRecorder('recording-progress', { elapsedSeconds: recordingElapsedSeconds });
-        }, 1000);
-        // Leave a visible three-second pre-roll so the team can settle on the
-        // chosen screen before the welcome narration begins.
+        recordingStatus.textContent = 'Get ready… recording starts after the countdown.';
+        // The screen stream is live during this pre-roll, but MediaRecorder is
+        // deliberately not started until the countdown overlay has disappeared.
         let countdown = 3;
         countdownOverlay.hidden = false;
         countdownLabel.textContent = `Get ready… ${countdown}`;
-        caption.textContent = `Get ready… the welcome starts in ${countdown}.`;
+        caption.textContent = `Get ready… the narration starts in ${countdown}.`;
         stepLabel.textContent = 'Recording will start shortly';
         setState('Get ready', 'ready');
         recordingCountdownTimer = window.setInterval(() => {
@@ -319,10 +301,24 @@
             window.clearInterval(recordingCountdownTimer);
             recordingCountdownTimer = null;
             countdownOverlay.hidden = true;
-            startDemo();
+            mediaRecorder.start(1000);
+            recordingElapsedSeconds = 0;
+            setRecordingElapsed(0);
+            stopRecordingButton.disabled = false;
+            recordingStatus.textContent = recordingHasAudio
+              ? 'Recording the selected screen with audio.'
+              : 'Recording video only; enable system audio in the sharing picker to capture narration.';
+            notifyRecorder('recording-started', { hasAudio: recordingHasAudio });
+            recordingTimer = window.setInterval(() => {
+              recordingElapsedSeconds += 1;
+              setRecordingElapsed(recordingElapsedSeconds);
+              notifyRecorder('recording-progress', { elapsedSeconds: recordingElapsedSeconds });
+            }, 1000);
+            // Let the recorder receive its first frame before starting speech.
+            window.setTimeout(startDemo, 300);
           } else {
             countdownLabel.textContent = `Get ready… ${countdown}`;
-            caption.textContent = `Get ready… the welcome starts in ${countdown}.`;
+            caption.textContent = `Get ready… the narration starts in ${countdown}.`;
           }
         }, 1000);
       }
@@ -353,7 +349,7 @@
         frameLabel.textContent = `App preview · ${step.title}`;
         stepLabel.textContent = `Step ${index + 1} of ${demoSteps.length} · ${step.title}`;
         caption.textContent = step.narration;
-        frame.src = step.url;
+        if (frame.getAttribute('src') !== step.url) frame.src = step.url;
         history.replaceState(null, '', `/demo?step=${encodeURIComponent(step.id)}`);
       }
 
